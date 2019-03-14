@@ -33,7 +33,7 @@
                 "JorisvanW\\DeepL\\Laravel\\DeepLServiceProvider"
             ],
             "aliases": {
-                "DeepL": "JorisvanW\\DeepL\\Laravel\\Facades\\DeepL"
+                "DeepL": "JorisvanW\\DeepL\\Laravel\\Facade"
             }
         }
     }
