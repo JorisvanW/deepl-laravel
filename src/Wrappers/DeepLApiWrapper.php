@@ -5,6 +5,7 @@ namespace JorisvanW\DeepL\Laravel\Wrappers;
 use JorisvanW\DeepL\Api\DeepLApiClient;
 use Illuminate\Contracts\Config\Repository;
 use JorisvanW\DeepL\Api\Exceptions\ApiException;
+use JorisvanW\DeepL\Api\Cons\Translate as TranslateType;
 
 /**
  * Class DeepLApiWrapper.
@@ -75,8 +76,31 @@ class DeepLApiWrapper
     /**
      * @return \JorisvanW\DeepL\Api\Endpoints\TranslateEndpoint
      */
-    public function translate()
+    public function translations()
     {
-        return $this->client->translate;
+        return $this->client->translations;
+    }
+
+    /**
+     * Translate a text with DeepL.
+     *
+     * @param string $text
+     * @param string $to
+     * @param string $from
+     * @param array  $options
+     *
+     * @return \JorisvanW\DeepL\Api\Resources\BaseResource|\JorisvanW\DeepL\Api\Resources\Translate
+     * @throws \JorisvanW\DeepL\Api\Exceptions\ApiException
+     */
+    public function translate(
+        $text,
+        $to = TranslateType::LANG_EN,
+        $from = TranslateType::LANG_AUTO,
+        $options = []
+    ) {
+        return $this->client->translations->translate($text,
+            $to = TranslateType::LANG_EN,
+            $from = TranslateType::LANG_AUTO,
+            $options = []);
     }
 }
