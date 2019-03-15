@@ -52,16 +52,13 @@ class DeepLServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->registerApiAdapter();
-    }
+        $this->app->singleton('deepl.api.client', function () {
+            return new DeepLApiClient;
+        });
 
-    /**
-     * Register the DeepL API adapter class.
-     *
-     * @return void
-     */
-    protected function registerApiAdapter()
-    {
+        $this->app->alias('deepl.api.client', DeepLApiClient::class);
+
+
         $this->app->singleton('deepl.api', function (Container $app) {
             $config = $app['config'];
 
@@ -69,8 +66,14 @@ class DeepLServiceProvider extends ServiceProvider
         });
 
         $this->app->alias('deepl.api', DeepLApiWrapper::class);
-    }
 
+
+        $this->app->singleton('deepl', function (Container $app) {
+            return new DeepL($app);
+        });
+
+        $this->app->alias('deepl', DeepL::class);
+    }
 
     /**
      * Get the services provided by the provider.
@@ -79,10 +82,6 @@ class DeepLServiceProvider extends ServiceProvider
      */
     public function provides()
     {
-        return [
-            'deepl',
-            'deepl.api',
-            'deepl.api.client',
-        ];
+        return ['deepl', 'deepl.api', 'deepl.api.client'];
     }
 }

@@ -5,6 +5,7 @@ namespace JorisvanW\DeepL\Laravel\Wrappers;
 use JorisvanW\DeepL\Api\DeepLApiClient;
 use Illuminate\Contracts\Config\Repository;
 use JorisvanW\DeepL\Api\Exceptions\ApiException;
+use JorisvanW\DeepL\Api\Cons\Translate as TranslateType;
 
 /**
  * Class DeepLApiWrapper.
@@ -73,7 +74,15 @@ class DeepLApiWrapper
     }
 
     /**
-     * Translate a collection of translations with \JorisvanW\DeepL\Api\Resources\Translate items from DeepL.
+     * @return \JorisvanW\DeepL\Api\Endpoints\TranslateEndpoint
+     */
+    public function translations()
+    {
+        return $this->client->translations;
+    }
+
+    /**
+     * Translate a text with DeepL.
      *
      * @param string $text
      * @param string $to
@@ -89,46 +98,9 @@ class DeepLApiWrapper
         $from = TranslateType::LANG_AUTO,
         $options = []
     ) {
-        $regexTemp = [];
-
-        // Prevent translating the :keys (and make it cheaper)
-        if (!array_get($options, 'translate_keys', false) && preg_match_all('~(:\w+)~', $text, $matches, PREG_PATTERN_ORDER)) {
-            foreach ($matches[1] as $key => $word) {
-                $regexTemp["_{$key}"] = $word;
-            }
-
-            $text = str_replace(array_values($regexTemp), array_keys($regexTemp), $text);
-        }
-
-        $response = $this->client->translations->translate($text, $to, $from, $options = []);
-
-        if (!empty($regexTemp)) {
-            foreach ($response->translations as $key => $translation) {
-                /** @var  text */
-                $response->translations[$key]->text = str_replace(array_keys($regexTemp), array_values($regexTemp), $translation->text);
-            }
-        }
-
-        return $response;
-    }
-
-    /**
-     * Translate a text with DeepL.
-     *
-     * @param string $text
-     * @param string $to
-     * @param string $from
-     * @param array  $options
-     *
-     * @return string
-     * @throws \JorisvanW\DeepL\Api\Exceptions\ApiException
-     */
-    public function translateText(
-        $text,
-        $to = TranslateType::LANG_EN,
-        $from = TranslateType::LANG_AUTO,
-        $options = []
-    ) {
-        return $this->translate($text, $to, $from, $options, true)->translations[0]->text;
+        return $this->client->translations->translate($text,
+            $to = TranslateType::LANG_EN,
+            $from = TranslateType::LANG_AUTO,
+            $options = []);
     }
 }
