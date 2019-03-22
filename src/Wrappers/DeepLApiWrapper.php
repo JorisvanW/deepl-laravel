@@ -111,9 +111,13 @@ class DeepLApiWrapper
 
         $response = $this->client->translations->translate($text, $to, $from, $options = []);
 
+        // Trim the text
+        foreach ($response->translations as $key => $translation) {
+            $response->translations[$key]->text = $this->trimText($translation->text);
+        }
+
         if (!empty($regexTemp)) {
             foreach ($response->translations as $key => $translation) {
-                /** @var  text */
                 $response->translations[$key]->text = str_replace(array_keys($regexTemp), array_values($regexTemp), $translation->text);
             }
         }
@@ -138,6 +142,39 @@ class DeepLApiWrapper
         $from = TranslateType::LANG_AUTO,
         $options = []
     ) {
-        return $this->translate($text, $to, $from, $options)->translations[0]->text;
+        return $this->trimText($this->translate($text, $to, $from, $options)->translations[0]->text);
+    }
+
+    /**
+     * Trim the text.
+     *
+     * @param $text
+     *
+     * @return string
+     */
+    public function trimText($text): string
+    {
+        $to   = [];
+        $from = [];
+
+        if (!empty($trims = array_get($this->config->get('deepl'), 'trim.space_before_char', []))) {
+            $from[] = '/\s([' . implode('|', $trims) . '])\s/';
+            $to[]   = '${1} ';
+            $from[] = '/\s([' . implode('|', $trims) . '])$/';
+            $to[]   = '${1}';
+        }
+
+        if (!empty($trims = array_get($this->config->get('deepl'), 'trim.spaces_between_char', []))) {
+            foreach ($trims as $trim) {
+                $to[]   = $trim . '${1}' . $trim;
+                $from[] = "/{$trim}\s(.*?)\s{$trim}/";
+            }
+        }
+
+        if (!empty($from) && !empty($to) && count($from) === count($to)) {
+            $text = preg_replace($from, $to, $text);
+        }
+
+        return $text;
     }
 }
