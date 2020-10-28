@@ -82,7 +82,7 @@ class DeepLApiWrapper
     }
 
     /**
-     * Translate a text with DeepL.
+     * Translate a collection of translations with \JorisvanW\DeepL\Api\Resources\Translate items from DeepL.
      *
      * @param string $text
      * @param string $to
@@ -98,9 +98,83 @@ class DeepLApiWrapper
         $from = TranslateType::LANG_AUTO,
         $options = []
     ) {
-        return $this->client->translations->translate($text,
-            $to = TranslateType::LANG_EN,
-            $from = TranslateType::LANG_AUTO,
-            $options = []);
+        $regexTemp = [];
+
+        // Prevent translating the :keys (and make it cheaper)
+        if (!array_get($options, 'translate_keys', false) && preg_match_all('~(:\w+)~', $text, $matches, PREG_PATTERN_ORDER)) {
+            foreach ($matches[1] as $key => $word) {
+                $regexTemp["_{$key}"] = $word;
+            }
+
+            $text = str_replace(array_values($regexTemp), array_keys($regexTemp), $text);
+        }
+
+        $response = $this->client->translations->translate($text, $to, $from, $options = []);
+
+        // Trim the text
+        foreach ($response->translations as $key => $translation) {
+            $response->translations[$key]->text = $this->trimText($translation->text);
+        }
+
+        if (!empty($regexTemp)) {
+            foreach ($response->translations as $key => $translation) {
+                $response->translations[$key]->text = str_replace(array_keys($regexTemp), array_values($regexTemp), $translation->text);
+            }
+        }
+
+        return $response;
+    }
+
+    /**
+     * Translate a text with DeepL.
+     *
+     * @param string $text
+     * @param string $to
+     * @param string $from
+     * @param array  $options
+     *
+     * @return string
+     * @throws \JorisvanW\DeepL\Api\Exceptions\ApiException
+     */
+    public function translateText(
+        $text,
+        $to = TranslateType::LANG_EN,
+        $from = TranslateType::LANG_AUTO,
+        $options = []
+    ) {
+        return $this->trimText($this->translate($text, $to, $from, $options)->translations[0]->text);
+    }
+
+    /**
+     * Trim the text.
+     *
+     * @param $text
+     *
+     * @return string
+     */
+    public function trimText($text): string
+    {
+        $to   = [];
+        $from = [];
+
+        if (!empty($trims = array_get($this->config->get('deepl'), 'trim.space_before_char', []))) {
+            $from[] = '/\s([' . implode('|', $trims) . '])\s/';
+            $to[]   = '${1} ';
+            $from[] = '/\s([' . implode('|', $trims) . '])$/';
+            $to[]   = '${1}';
+        }
+
+        if (!empty($trims = array_get($this->config->get('deepl'), 'trim.spaces_between_char', []))) {
+            foreach ($trims as $trim) {
+                $to[]   = $trim . '${1}' . $trim;
+                $from[] = "/{$trim}\s(.*?)\s{$trim}/";
+            }
+        }
+
+        if (!empty($from) && !empty($to) && count($from) === count($to)) {
+            $text = preg_replace($from, $to, $text);
+        }
+
+        return $text;
     }
 }
