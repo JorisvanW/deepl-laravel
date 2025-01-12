@@ -9,26 +9,15 @@ Add the package to your project using Composer:
 composer require jorisvanw/deepl-laravel
 ```
 
-## 2.	Publish the Configuration:
-Publish the package’s configuration file to customize its settings:
-
-```
-php artisan vendor:publish --provider="JorisvanW\DeepL\DeepLServiceProvider"
-```
-
-This command will create a deepl.php configuration file in your config directory.
-
-## 3.	Configure the API Key
+## 2.	Configure the API Key
 
 Obtain your DeepL API key from the DeepL Pro Account and set it in your `.env` file:
 
 ```
-DEEPL_API_KEY=your_deepl_api_key
+DEEPL_KEY=your_deepl_api_key
 ```
 
-Ensure that the `DEEPL_API_KEY` environment variable is referenced in the `config/deepl.php` configuration file.
-
-## 4.	Usage:
+## 3.	Usage:
 After configuration, you can use the DeepL translation service in your application. Here’s an example of translating text within a controller:
 
 ```php 
