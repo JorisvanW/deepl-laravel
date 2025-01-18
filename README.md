@@ -17,6 +17,12 @@ Obtain your DeepL API key from the DeepL Pro Account and set it in your `.env` f
 DEEPL_KEY=your_deepl_api_key
 ```
 
+(Optional) Publish the config file, should yoiu wish to change it
+
+```
+php artisan vendor:publish --provider="JorisvanW\DeepL\Laravel\DeepLServiceProvider"
+```
+
 ## 3.	Usage:
 After configuration, you can use the DeepL translation service in your application. Here’s an example of translating text within a controller:
 
