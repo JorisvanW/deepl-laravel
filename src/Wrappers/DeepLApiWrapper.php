@@ -101,13 +101,27 @@ class DeepLApiWrapper
         $regexTemp = [];
 
         // Prevent translating the :keys (and make it cheaper)
-        if (!array_get($options, 'translate_keys', false) && preg_match_all('~(:\w+)~', $text, $matches, PREG_PATTERN_ORDER)) {
-            foreach ($matches[1] as $key => $word) {
-                $regexTemp["_{$key}"] = $word;
+        if (array_get($options, 'translate_keys', true)) {
+            if (preg_match_all('~(:\w+)~', $text, $matches, PREG_PATTERN_ORDER)) {
+                foreach ($matches[1] as $key => $word) {
+                    $regexTemp["_100{$key}"] = $word;
+                }
             }
 
-            $text = str_replace(array_values($regexTemp), array_keys($regexTemp), $text);
+            if (preg_match_all('~(@\w+)~', $text, $matches, PREG_PATTERN_ORDER)) {
+                foreach ($matches[1] as $key => $word) {
+                    $regexTemp["_200{$key}"] = $word;
+                }
+            }
         }
+
+        if (!empty($words = array_get($options, 'prevent_translation_words', []))) {
+            foreach ($words as $key => $word) {
+                $regexTemp["_100{$key}"] = $word;
+            }
+        }
+
+        $text = str_replace(array_values($regexTemp), array_keys($regexTemp), $text);
 
         $response = $this->client->translations->translate($text, $to, $from, $options = []);
 
